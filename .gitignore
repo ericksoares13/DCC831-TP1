@@ -224,3 +224,6 @@ paper_templates-2026v1/*.blg
 paper_templates-2026v1/*.fdb_latexmk
 paper_templates-2026v1/*.fls
 paper_templates-2026v1/*.synctex.gz
+
+# Data files (copyright)
+dataset/
