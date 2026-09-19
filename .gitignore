@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Latex intermediate files
+paper_templates-2026v1/*.aux
+paper_templates-2026v1/*.bbl
+paper_templates-2026v1/*.blg
+paper_templates-2026v1/*.fdb_latexmk
+paper_templates-2026v1/*.fls
+paper_templates-2026v1/*.synctex.gz
