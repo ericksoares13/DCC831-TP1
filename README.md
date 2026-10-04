@@ -61,7 +61,8 @@ O dataset utilizado é o conjunto de **371 corais a quatro vozes (SATB) de J.S. 
 
 Ferramentas de IA foram utilizadas como apoio neste trabalho, conforme permitido pelo enunciado:
 
-N/A
+- **Claude (Anthropic)**, via **Claude for Scientists**: me ajudou a implementar o código Python (`parse_musicxml.py`, `generate.py`), a fazer a análise quantitativa dos resultados (comparação estatística entre as músicas geradas e os 371 corais reais de Bach: entropia, divergência KL, z-score) e a revisar o texto do resumo em LaTeX. As decisões de método, de projeto e a interpretação final dos resultados são minhas.
+- O Claude for Scientists não deixa compartilhar conversa publicamente. Por isso, o artefato de análise (o dashboard com as métricas comparativas) está disponível aqui: https://claude.ai/artifact/2pk1nFwHq3xb6TXEDQH6Xg?sk=O5Kk39MaRL1C989ZzDShyA. Também mandei o convite de acesso pro e-mail do professor, **lferreira@dcc.ufmg.br**. Se o link expirar, é só me chamar que eu reenvio, ou a gente combina uma reunião com tela compartilhada pra ver a conversa inteira.
 
 ---
 
