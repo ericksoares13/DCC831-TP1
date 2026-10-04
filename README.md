@@ -9,9 +9,9 @@
 
 ## Descrição
 
-Implementação de um sistema de geração musical simbólica baseado em **Cadeias de Markov**, treinado sobre um corpus de músicas de Taylor Swift. O sistema aprende progressões de acordes características do estilo da artista e gera novas sequências harmônicas, produzindo arquivos MIDI reproduzíveis.
+Implementação de um sistema de geração musical simbólica baseado em **Cadeias de Markov de ordem n**, treinado sobre a voz do baixo dos **371 corais a quatro vozes (SATB) de J.S. Bach** distribuídos com a biblioteca `music21`. O sistema aprende os padrões de pitch e duração dessa voz e gera novas linhas em formato MIDI (instrumento Piano).
 
-A restrição estilística adotada é o **estilo de Taylor Swift**, usando sua discografia (2006–2023) como corpus de treinamento.
+A restrição estilística adotada é o **estilo coral de Bach**: todas as peças de treino são normalizadas para Dó maior/Lá menor antes do aprendizado, concentrando o modelo nos contornos melódicos relativos do estilo, independente da tonalidade original de cada coral.
 
 ---
 
@@ -27,51 +27,33 @@ pip install -r requirements.txt
 
 ## Reprodução dos resultados
 
-N/A
+O dataset de corais já vem embutido no `music21` (ver seção Dataset abaixo), sem necessidade de download. Gere uma música com:
+
+```bash
+python generate.py --order 2 --temperature 1.0 --seed 42
+```
+
+O arquivo MIDI gerado vai para `output/bach_ord{order}_T{temperature}.mid`.
+
+Principais opções (ver `python generate.py --help`):
+
+| Flag | Padrão | Descrição |
+|---|---|---|
+| `--order` | 2 | Ordem da cadeia de Markov |
+| `--temperature` | 1.0 | Temperatura de amostragem |
+| `--seed` | — | Semente aleatória, para reprodutibilidade |
+| `--length` | 200 | Número de tokens da sequência gerada |
+| `--bpm` | 80 | Tempo do MIDI de saída |
+
+A primeira execução processa os 371 corais com `music21`; um cache é salvo em `.parse_chorale_cache.pkl` e reaproveitado nas execuções seguintes.
 
 ---
 
 ## Dataset
 
-Os arquivos MIDI do corpus **não estão incluídos** neste repositório por questões de direitos autorais. As transcrições foram obtidas manualmente em: https://freemidi.org/artist-1599-taylor-swift
+O dataset utilizado é o conjunto de **371 corais a quatro vozes (SATB) de J.S. Bach** distribuído junto com a biblioteca `music21`, acessado via `music21.corpus`.
 
-Para reproduzir os resultados, baixe os arquivos abaixo e coloque-os na pasta `dataset/`:
-
-| Arquivo | Álbum |
-|---|---|
-| 22.mid | Red (2012) |
-| BackToDecember.mid | Speak Now (2010) |
-| BadBlood.mid | 1989 (2014) |
-| BeginAgain.mid | Red (2012) |
-| BetterThanRevenge(TaylorsVersion).mid | Speak Now (TV) (2023) |
-| BlankSpace.mid | 1989 (2014) |
-| Fearless.mid | Fearless (2008) |
-| Fifteen.mid | Fearless (2008) |
-| IsItOverNow.mid | 1989 (TV) (2023) |
-| Knewyouweretrouble.mid | Red (2012) |
-| LongLive.mid | Speak Now (2010) |
-| LookWhatYouMadeMeDo.mid | Reputation (2017) |
-| LoveStory.mid | Fearless (2008) |
-| MarysSong.mid | Taylor Swift (2006) |
-| mean.mid | Speak Now (2010) |
-| Mine.mid | Speak Now (2010) |
-| NeverGrowUp.mid | Speak Now (2010) |
-| Opalite.mid | The Life of a Showgirl (2025) |
-| OurSong.mid | Taylor Swift (2006) |
-| picturetoburn.mid | Taylor Swift (2006) |
-| Red.mid | Red (2012) |
-| SafeandSound.mid | The Hunger Games (2012) |
-| ShakeItOff.mid | 1989 (2014) |
-| sparksfly.mid | Speak Now (2010) |
-| SpeakNow.mid | Speak Now (2010) |
-| Style.mid | 1989 (2014) |
-| TeardropsOnMyGuitar.mid | Taylor Swift (2006) |
-| TheFateofOphelia.mid | The Life of a Showgirl (2025) |
-| TimMcGraw.mid | Taylor Swift (2006) |
-| Weareneverevergettingbacktogether.mid | Red (2012) |
-| WhiteHorse.mid | Fearless (2008) |
-| YouBelongWithMe.mid | Fearless (2008) |
-| YoureNotSorry.mid | Fearless (2008) |
+**Conteúdo:** cada coral tem quatro vozes anotadas (Soprano, Alto, Tenor, Baixo). Este trabalho treina apenas sobre a voz do **Baixo**, escolhida por ser a mais ativa das quatro vozes (maior salto melódico médio e maior densidade rítmica, medido sobre o dataset inteiro).
 
 ---
 
@@ -87,8 +69,10 @@ N/A
 
 ```
 .
-├── dataset/                  # Arquivos MIDI do corpus (não versionados – ver Dataset acima)
-├── paper_templates-2026v1/   # Template LaTeX ISMIR
+├── output/                   # MIDIs gerados por generate.py (não versionado)
+├── paper_templates-2026v1/   # Resumo em formato ISMIR (.tex/.pdf)
+├── parse_musicxml.py         # Parser: carrega o dataset e treina a cadeia de Markov
+├── generate.py               # Geração da sequência e escrita do MIDI de saída
 ├── requirements.txt          # Dependências Python
 └── README.md
 ```
