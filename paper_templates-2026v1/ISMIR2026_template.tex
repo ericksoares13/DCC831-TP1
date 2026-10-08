@@ -1,221 +1,347 @@
 % -----------------------------------------------
-% Template for ISMIR Papers
-% 2026 version, based on previous ISMIR templates
-
-% Requirements :
-% * 6+n page length maximum
-% * 10MB maximum file size
-% * Copyright note must appear in the bottom left corner of first page
-% * Clearer statement about citing own work in anonymized submission
-% (see conference website for additional details)
+% DCC831-TP1: Geração Simbólica de Melodias no Estilo Coral de Bach com Cadeias
+%             de Markov de Ordem n Erick Soares de Souza, UFMG 2026/2
 % -----------------------------------------------
 
 \documentclass{article}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-% \usepackage[submission]{ismir} % Remove the "submission" option for camera-ready version
 \usepackage{ismir}
 \usepackage{amsmath,cite,url}
 \usepackage{graphicx}
 \usepackage{color}
+\usepackage{booktabs}
 
-% Title. Please use IEEE-compliant title case when specifying the title here,
-% as it has implications for the copyright notice
-% ------
-\title{Paper Template for ISMIR \conferenceyear}
+\title{Geração Simbólica de Melodias no Estilo Coral de Bach com Cadeias de Markov de Ordem $n$}
 
-% Note: Please do NOT use \thanks or a \footnote in any of the author markup
-
-% Single address
-% To use with only one author or several with the same address
-% ---------------
 \oneauthor
-  {Erick Soares de Souza}
-  {Federal University of Minas Gerais\\\texttt{ericksoares@dcc.ufmg.br}}
+  {Erick Soares de Souza} {Universidade Federal de Minas Gerais \\
+  \texttt{ericksoares@dcc.ufmg.br}}
 
-% Two addresses
-% --------------
-%\twoauthors
-%   {First author} {School \\ Department}
-%   {Second author} {Company \\ Address}
+\def\authorname{E. S. Souza}
 
-% Three addresses
-% --------------
-% \threeauthors
-%   {First Author} {Affiliation 1 \\ \texttt{author1@ismir.edu}}
-%   {Second Author} {Affiliation 2 \\ \texttt{author2@ismir.edu}}
-%   {Third Author} {Affiliation 3 \\ \texttt{author3@ismir.edu}}
+% ismir.sty define \abstract com o texto fixo "ABSTRACT" em inglês;
+% sobrescrevemos aqui pra manter o resumo todo em português.
+\renewcommand{\abstract}{\begin{center}\bf RESUMO\end{center}}
 
-% Four or more addresses
-% OR alternative format for large number of co-authors
-% ------------
-% \multauthor
-%   {First author$^1$ \hspace{1cm} Second author$^1$ \hspace{1cm} Third author$^2$}
-%   {{\bf Fourth author$^3$ \hspace{1cm} Fifth author$^2$ \hspace{1cm} Sixth author$^1$}\\
-%   $^1$ Department of Computer Science, University, Country\\
-%   $^2$ International Laboratories, City, Country\\
-%   $^3$ Company, Address\\
-%   {\tt\small CorrespondenceAuthor@ismir.edu, PossibleOtherAuthor@ismir.edu}
-%   }
-
-% For the author list in the Creative Common license, please enter author names.
-% Please abbreviate the first names of authors and add 'and' between the second to last and last authors.
-\def\authorname{Erick Soares de Souza}
-
-% Optional: To use hyperref, uncomment the following.
-% \usepackage[bookmarks=false,pdfauthor={\authorname},pdfsubject={\pdfsubject},hidelinks]{hyperref}
-% Mind the bookmarks=false option; bookmarks are incompatible with ismir.sty.
-
-\sloppy % please retain sloppy command for improved formatting
+\sloppy
 
 \begin{document}
 
 \maketitle
 
+% -----------------------------------------------
 \begin{abstract}
-The abstract should be placed at the top left column and should contain about 150--200 words.
+  Este trabalho apresenta um sistema de geração simbólica de melodias baseado em
+  Cadeias de Markov de ordem $n$, treinado sobre a voz do baixo dos 371 corais a
+  quatro vozes (SATB) de J.S. Bach distribuídos com a biblioteca
+  \texttt{music21}, adotados como restrição estilística. Entre as quatro vozes,
+  o baixo é escolhido por ser a mais ativa, com maior salto melódico médio e
+  maior densidade rítmica, e todas as peças são normalizadas para Dó maior antes
+  do treino, de modo a concentrar a aprendizagem nos padrões melódicos relativos
+  ao estilo. Os tokens representam eventos de pitch e duração no formato
+  \texttt{Pitch:dur}, além de pausas (\texttt{R:dur}) e marcadores de compasso
+  (\texttt{BAR}). Dois hiperparâmetros principais são explorados: a ordem $n \in
+    \{1, 2, 3\}$, que define a memória do modelo, e a temperatura $T \in
+    \{0{,}5;\; 1{,}0;\; 1{,}5\}$, que controla a diversidade da amostragem. Para
+  avaliar objetivamente a fidelidade estilística, as 9 combinações resultantes
+  são comparadas estatisticamente, com 5 sementes cada, ao corpus real por meio
+  de entropia de pitch, proporção de movimento por grau conjunto, intervalo
+  médio e divergência de Kullback-Leibler (KL) da distribuição de intervalos. Os
+  resultados indicam que a ordem 2 com $T=1{,}0$ é a configuração mais fiel ao
+  estilo de Bach, com a menor divergência KL entre todas ($0{,}022$),
+  equilibrando fidelidade estatística e diversidade. O código está disponível em
+  \url{https://github.com/ericksoares13/DCC831-TP1}.
 \end{abstract}
 
-\section{Introduction}\label{sec:introduction}
+% -----------------------------------------------
+\section{Introdução}\label{sec:intro}
 
-This template includes all the information about formatting manuscripts for the ISMIR \conferenceyear\ Conference. Please follow these guidelines to give the final proceedings a uniform look. Most of the required formatting is achieved automatically by using the supplied style file (\LaTeX) or template (Word). If you have any questions, please contact the Program Committee (\texttt{ismir\conferenceyear-papers@ismir.net}). This template can be downloaded from the ISMIR \conferenceyear\ website (\texttt{https://ismir\conferenceyear.ismir.net}).
+A geração algorítmica de música simbólica, isto é, a geração de sequências de
+eventos musicais discretos como notas e pausas, é um problema clássico de
+inteligência artificial aplicada à música, discutido por Ames
+(1989)~\cite{Ames1989:markov}. Entre os modelos probabilísticos propostos para
+essa tarefa, as Cadeias de Markov destacam-se pela interpretabilidade, pela
+facilidade de treinamento e pela capacidade de produzir resultados musicalmente
+inteligíveis mesmo em ordens baixas.
 
-\section{Paper Length \& File Size}
+Neste trabalho, adota-se o estilo coral de Bach como restrição estilística,
+explorando um corpus de grande porte e estilisticamente coeso, o conjunto de 371
+corais a quatro vozes distribuído com a biblioteca \texttt{music21}. A voz do
+baixo, detalhada na Seção~\ref{sec:method}, é utilizada como linha de
+treinamento, com normalização tonal aplicada para reduzir o viés de tonalidade
+original de cada peça.
 
-We adopt a ``\textbf{(6+n)-page policy}'' for ISMIR \conferenceyear. That is, each paper may have a maximum of six pages of technical content (including figures and tables), with additional optional pages that contain only references and optional acknowledgments, AI Usage Statement and Ethics Statement. \textbf{Note that acknowledgments should not be included in the anonymized submission.}
+O sistema proposto é inspirado no trabalho de Shapiro \& Huber
+(2021)~\cite{Shapiro2021:markov}, estendido para ordem $n > 1$, amostragem com
+temperatura e um corpus de maior escala, 371 corais, contra um único arquivo por
+instrumento em Shapiro \& Huber. Diferentemente da avaliação qualitativa desses
+autores, este trabalho também conduz uma avaliação quantitativa sistemática
+frente ao corpus real (Seção~\ref{sec:results}).
 
-Paper should be submitted as a PDF file. \textbf{The file size is limited to 10MB.} Please compress images and figures as necessary before submitting.
+% -----------------------------------------------
+\section{Trabalhos Relacionados}\label{sec:related}
 
-\section{Page Size}\label{sec:page_size}
+Ames (1989)~\cite{Ames1989:markov} fornece o panorama fundacional do uso de
+Cadeias de Markov como modelo composicional. O autor classifica os modelos por
+ordem e discute o compromisso entre memorização do corpus e generalização
+criativa, argumento que guia diretamente a escolha de ordem adotada. O artigo
+demonstra que já na ordem 1 emergem estruturas musicalmente reconhecíveis,
+enquanto ordens elevadas tendem à reprodução literal de trechos do corpus.
 
-The proceedings will be printed on \underline{portrait A4-size paper} \underline{(21.0cm x 29.7cm)}. All material on each page should fit within a rectangle of 17.2cm x 25.2cm, centered on the page, beginning 2.0cm from the top of the page and ending with 2.5cm from the bottom. The left and right margins should be 1.9cm. The text should be in two 8.2cm columns with a 0.8cm gutter. All text must be in a two-column format. Text must be fully justified.
+Shapiro \& Huber (2021)~\cite{Shapiro2021:markov} são a referência técnica
+direta deste trabalho. Os autores implementam um gerador de ordem 1 treinado
+sobre trechos de MusicXML de um único instrumento por corpus. A abordagem aqui
+apresentada expande esse método para ordem $n$, temperatura controlável e um
+corpus de maior escala (371 corais de Bach), mantendo a mesma estrutura de
+Parser/Generator e os mesmos nomes de funções.
 
-\section{Typeset Text}\label{sec:typeset_text}
+Pachet (2003)~\cite{Pachet2003:continuator} apresenta o \emph{Continuator},
+sistema interativo de improvisação que aprende o estilo do músico em tempo real
+via Cadeias de Markov de ordem variável, navegando o espaço de estados sem fixar
+a ordem \emph{a priori} e evitando o compromisso ordem-generalização.
+Diferentemente, a abordagem adotada usa ordem fixa, mais simples de inspecionar
+e justificar em um contexto didático.
 
-\subsection{Normal or Body Text}\label{subsec:body}
+Conklin \& Witten (1995)~\cite{Conklin1995:multiple} propõem os \emph{Multiple
+  Viewpoint Systems}, nos quais múltiplas cadeias de Markov operam sobre
+representações diferentes da música (pitch, intervalo, contorno, duração), e
+suas probabilidades são combinadas. Essa abordagem mitiga a esparsidade de
+estados de ordem elevada, problema observado experimentalmente mesmo num
+corpus estilisticamente homogêneo como o dos corais (Seção~\ref{sec:results}).
+Uma extensão natural do método proposto seria adotar múltiplos pontos de
+vista.
 
-Please use a 10pt (point) Times font. Sans-serif or non-proportional fonts can be used only for special purposes, such as distinguishing source code text.
+Pearce \& Wiggins (2004)~\cite{Pearce2004:methods} estendem o trabalho de
+Conklin \& Witten com o modelo IDyOM, que seleciona a ordem adaptivamente com
+base na entropia local da sequência. Esse mecanismo seria especialmente valioso
+no contexto deste estudo, já que a esparsidade cresce rapidamente com a ordem
+mesmo dentro de um corpus coeso, sugerindo que uma ordem adaptativa equilibraria
+melhor fidelidade e generalização música a música.
 
-The first paragraph in each section should not be indented, but all other paragraphs should be.
+% -----------------------------------------------
+\section{Método}\label{sec:method}
 
-\subsection{Title and Authors}
+\subsection{Conjunto de Dados e Pré-processamento}
 
-The title is 14pt Times, bold, caps, upper case, centered. \textbf{Authors' names are omitted when submitting for double-blind reviewing.}
+É utilizada a voz do baixo dos 371 corais a quatro vozes de J.S. Bach
+distribuídos com o \texttt{music21}, acessados diretamente via
+\texttt{music21.corpus}. Essa voz é escolhida, entre as quatro, por ser a mais
+ativa, apresentando salto melódico médio de 3,10 semitons e 47\,\% de notas com
+duração menor que um tempo, contra 1,7--2,0 semitons e 19--42\,\% nas demais
+vozes, medido sobre o dataset inteiro. Um pequeno número de corais não tem a voz
+anotada por nome e, nesses casos, como todo coral a quatro vozes lista
+soprano/alto/tenor/baixo nessa ordem, a última voz é usada como alternativa.
+Cada peça é convertida com \texttt{music21}, de modo que as notas são extraídas
+com seus offsets e durações expressas em \emph{quarter lengths}. Aplica-se
+normalização tonal (\texttt{normalize\_key}), em que a tonalidade é detectada
+por \texttt{music21.analysis.discrete} e todas as notas são transpostas para Dó
+maior/lá menor antes da tokenização. Um cache em disco evita reprocessamento, já
+que processar o dataset inteiro com o \texttt{music21} leva cerca de 75
+segundos.
 
-\subsection{First Page Copyright Notice}
+\subsection{Representação por Tokens}
 
-Please include the copyright notice exactly as it appears here in the lower left-hand corner of the page. It is set in 8pt Times.
+Cada evento musical é mapeado para um token de texto: nota (\texttt{G4:1.0},
+pitch em notação científica e duração em \emph{quarter lengths}), pausa
+(\texttt{R:0.5}, silêncio com a duração indicada) e compasso (\texttt{BAR},
+marcador de barra de compasso), guiando a geração pela estrutura de frases do
+estilo. Como a voz do baixo é essencialmente monofônica, múltiplas notas
+simultâneas praticamente não ocorrem. Por segurança, mantém-se ainda assim a
+regra de reduzir qualquer sobreposição à nota mais aguda, evitando que uma
+eventual sobreposição pontual exploda o espaço de estados em vez de ser tratada
+como uma nota só. A sequência de tokens de cada peça constitui, assim, uma
+\emph{frase de treinamento} para o modelo.
 
+\subsection{Cadeia de Markov de Ordem $n$}
 
-\subsection{Page Numbering, Headers and Footers}
+Seguindo Shapiro \& Huber (2021)~\cite{Shapiro2021:markov}, a estrutura de dados
+central é um dicionário esparso de transições. Para cada estado (janela de $n$
+tokens consecutivos), armazena-se a contagem de cada sucessor observado no
+corpus, e após o treinamento essas contagens são normalizadas em probabilidades.
 
-Do not include headers, footers or page numbers in your submission. These will be added when the publications are assembled.
+A inicialização usa a distribuição acumulada de estados iniciais (CDF) e a
+função \texttt{find\_nearest\_above}, que retorna o primeiro estado cuja
+probabilidade acumulada ultrapassa um valor sorteado, idêntica à de Shapiro \&
+Huber (2021)~\cite{Shapiro2021:markov}. As transições seguintes usam
+\texttt{random.choices}, função do Python que sorteia um elemento
+proporcionalmente a pesos dados, equivalente ao método da CDF para $T = 1$.
+Quando a janela atual não tem sucessor observado, mais comum em ordens altas
+(Seção~\ref{sec:results}), a geração reinicia a partir da distribuição de
+estados iniciais. Shapiro \& Huber, nessa situação, encerram o programa.
 
-\subsection{Line Numbers}
+\subsection{Temperatura}
 
-\textbf{Line numbers should be included in your submitted manuscript,} for reference during reviewing.
+Antes da amostragem, os pesos de transição são reescalados:
+\begin{equation}
+  w'_i = w_i^{1/T}, \quad T > 0.
+  \label{eq:temperature}
+\end{equation}
+Para $T < 1$ o modelo favorece transições mais prováveis, ficando mais
+conservador, enquanto para $T > 1$ a distribuição se uniformiza, ficando mais
+criativo. Em $T = 1$ o comportamento reproduz o de Shapiro \& Huber.
 
-\section{First Level Headings}
+\subsection{Síntese MIDI}
 
-First-level headings are in Times 10pt bold, centered with 1 line of space above the section head, and 1/2 space below it. For a section header immediately followed by a subsection header, the space should be merged.
+Ao converter a sequência de tokens gerada em um arquivo MIDI, duas correções são
+aplicadas. Cada pitch é restrito à tessitura do piano (21--108), transpondo por
+oitavas quando necessário, já que normalização tonal ou notas atípicas do
+dataset podem gerar pitches fora desse intervalo. Além disso, a velocidade MIDI
+de cada nota segue um envelope senoidal por frases de 8 notas, com decaimento
+global de 10\% ao longo da peça, substituindo o volume fixo (100) de Shapiro \&
+Huber por uma dinâmica que sugere fraseado musical.
 
-\subsection{Second Level Headings}
+% -----------------------------------------------
+\section{Resultados}\label{sec:results}
 
-Second-level headings are in Times 10pt bold, flush left, with 1 line of space above the section head, and 1/2 space below it. The first letter of each significant word is capitalized.
+Treinado sobre as 371 peças, usando a voz do baixo normalizada para Dó maior/lá
+menor, o vocabulário de tokens distintos é de 180 estados. O número de chaves de
+transição cresce com a ordem, sendo 180 em ordem 1, 1861 em ordem 2 e 6644 em
+ordem 3, o que evidencia a esparsidade crescente mesmo num corpus
+estilisticamente homogêneo. A normalização tonal reduz esse número em todas as
+ordens, 1861 contra 2155 chaves em ordem 2 e 6644 contra 7873 em ordem 3 sem
+normalização, confirmando que concentrar as peças em uma única tonalidade
+central reduz a fragmentação de padrões equivalentes transpostos.
 
-\subsubsection{Third and Further Level Headings}
+Para avaliar a fidelidade estilística, são geradas as 9 combinações de ordem
+($n\in\{1,2,3\}$) e temperatura ($T\in\{0{,}5;1{,}0;1{,}5\}$), com 5 sementes
+cada (200 tokens, 80 BPM), comparadas estatisticamente com os 371 corais reais
+(mesma voz, mesma normalização). As métricas usadas incluem entropia de Shannon
+do pitch ($H$), proporção de intervalos de até 2 semitons (\emph{steps}, limiar
+de cantabilidade), intervalo melódico médio absoluto, proporção de tokens de
+pausa/compasso, divergência KL entre a distribuição de intervalos gerada e a
+real, e o desvio médio em $\sigma$ (mean-$z$) em relação à variabilidade
+observada entre os próprios corais. A Tabela~\ref{tab:results} resume os
+resultados, com a primeira linha trazendo os valores de referência do corpus
+real (média por coral).
 
-Third-level headings are in Times 10pt italic, flush left, with 1/2 line of space above the section head, and 1/2 space below it. The first letter of each significant word is capitalized. Using more than three levels of headings is highly discouraged.
-
-\section{Footnotes and Figures}
-
-\subsection{Footnotes}
-
-Indicate footnotes with a number in the text.\footnote{This is a footnote.} Use 8pt type for footnotes. Place the footnotes at the bottom of the page on which they appear. Precede the footnote with a 0.5pt horizontal rule.
-
-\subsection{Figures, Tables and Captions}
-
-All artwork must be centered, neat, clean, and legible. All lines should be very dark for purposes of reproduction and artwork should not be hand-drawn. While proceedings are generated in color, all figures must also make sense when printed out in grayscale. \textbf{Figure and table numbers and captions always appear below the figure.} Leave 1 line space between the figure or table and the caption. Each figure or table is numbered consecutively. Captions should be Times 10pt. Place tables/figures in text as close to the reference as possible. References to tables and figures should be capitalized, for example, see \figref{fig:example} and \tabref{tab:example}. Figures and tables may extend across both columns to a maximum width of 17.2cm.
-
-\textbf{To enhance accessibility, we strongly encourage the authors to adopt a color blind friendly color palette when making plots.} For Matplotlib users, the `tableau-colorblind10' and `petroff10' color palettes would be good options, which can be enabled by \texttt{plt.style.use('tableau-colorblind10')} and \texttt{plt.style.use('petroff10')}.
-
-\begin{table}
+\begin{table}[ht]
   \centering
-  \begin{tabular}{|l|l|}
-    \hline
-    String value & Numeric value \\
-    \hline
-    Hello ISMIR  & \conferenceyear \\
-    \hline
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \caption{Métricas vs.\ corpus real (371 corais, 9 configurações, 5 sementes cada).}
+  \label{tab:results}
+  \begin{tabular}{ccrrrrrr}
+    \toprule
+    Ord                      & $T$   & $H$    & Steps  & Ivl $\mu$ & Pausas &
+    $z$                      & KL                                             \\
+    \midrule
+    \multicolumn{2}{c}{Bach} & 4,241 & 66,1\% & 3,249  & 21,1\%    & 0,00   &
+    0,000                                                                     \\
+    1                        & 0,5   & 4,152  & 70,3\% & 3,097     & 25,2\% &
+    0,50                     & 0,079                                          \\
+    1                        & 1,0   & 5,069  & 57,1\% & 4,138     & 23,4\% &
+    2,16                     & 0,149                                          \\
+    1                        & 1,5   & 5,441  & 55,1\% & 4,555     & 16,7\% &
+    2,85                     & 0,208                                          \\
+    2                        & 0,5   & 4,575  & 70,3\% & 3,132     & 28,8\% &
+    0,90                     & 0,041                                          \\
+    2                        & 1,0   & 4,820  & 67,3\% & 3,129     & 22,2\% &
+    1,22                     & 0,022                                          \\
+    2                        & 1,5   & 5,110  & 62,7\% & 3,396     & 20,4\% &
+    1,63                     & 0,025                                          \\
+    3                        & 0,5   & 4,793  & 64,3\% & 3,546     & 25,9\% &
+    1,31                     & 0,023                                          \\
+    3                        & 1,0   & 4,978  & 62,7\% & 3,464     & 22,8\% &
+    1,48                     & 0,034                                          \\
+    3                        & 1,5   & 5,013  & 62,9\% & 3,598     & 23,4\% &
+    1,65                     & 0,029                                          \\
+    \bottomrule
   \end{tabular}
-  \caption{Table captions should be placed below the table.}
-  \label{tab:example}
 \end{table}
 
-\begin{figure}
-  \centering
-  \includegraphics[alt={ISMIR 2025 template example image},width=0.9\linewidth]{example.png}
-  \caption{Figure captions should be placed below the figure.}
-  \label{fig:example}
-\end{figure}
+Em termos de fidelidade, a ordem 2 com $T=1{,}0$ é a configuração mais próxima
+do corpus real pela distribuição de intervalos, com a menor divergência KL entre
+todas ($0{,}022$). Seu intervalo médio, 3,13 contra 3,25 semitons reais, e sua
+proporção de steps, 67,3\,\% contra 66,1\,\% reais, ficam dentro de 1$\sigma$ do
+corpus, e a proporção de pausas, 22,2\,\% contra 21,1\,\% reais, é quase
+idêntica, sendo a única configuração que acerta ambos simultaneamente.
 
-\section{Equations}
+Quanto à relação entre ordem e fidelidade, as ordens 2 e 3 produzem
+distribuições de intervalo muito mais próximas do real que a ordem 1, cujo
+$T=1{,}5$ chega a KL $=0{,}208$, nove vezes maior que o de $O2{+}T1{,}0$. Isso
+ocorre porque a cadeia de ordem 1 aprende transições isoladas e, com temperatura
+alta, passa a gerar saltos de 7\textordmasculine/8\textordmasculine\ que Bach
+raramente usa, enquanto as ordens 2--3 preservam contexto suficiente para
+restringir os saltos a regiões musicalmente plausíveis do estilo.
 
-Equations should be placed on separate lines and numbered. The number should be on the right side, in parentheses, as in \eqnref{relativity}.
+Já o efeito da temperatura é assimétrico entre ordens. Em ordem 1, $T=1{,}5$
+causa colapso de fidelidade, com intervalo médio de 4,55 semitons e só 55\,\% de
+steps, ao passo que em ordens 2--3 o efeito é suave, com o KL de ordem 2 subindo
+apenas de 0,022 ($T{=}1{,}0$) para 0,025 ($T{=}1{,}5$), ainda dentro de
+1$\sigma$. Isso indica que a temperatura só introduz diversidade genuína quando
+há contexto suficiente, enquanto em ordem 1 ela introduz principalmente ruído.
 
-\begin{equation}\label{relativity}
-E=mc^{2}
-\end{equation}
+Analisando-se a entropia, nota-se que maior fidelidade não implica menor
+entropia. A configuração mais próxima globalmente por mean-$z$ ($O1{+}T0{,}5$,
+mean-$z=0{,}50$) tem a menor entropia, 4,15 bits, mais perto dos 4,24 reais,
+enquanto $O2{+}T1{,}0$ tem entropia maior, 4,82 bits, $2{,}0\sigma$ acima, e
+ainda assim é a mais fiel pelos intervalos. A razão é que Bach usa uma
+distribuição de pitch não uniforme, em que tônica, dominante e subdominante
+dominam, e a ordem 2 distribui alturas de forma mais homogênea, mas preserva os
+intervalos preferenciais do estilo (graus conjuntos, quartas/quintas).
 
-\section{Citations}
+Observa-se também uma saturação em ordem 3. De $T{=}1{,}0$ para $T{=}1{,}5$, o
+KL \emph{cai} (0,034$\to$0,029) e a entropia varia só 0,04 bits, já que, com
+contexto de 3 tokens, o espaço de transições é tão restrito que a temperatura
+extra redistribui peso entre opções igualmente raras, sem acrescentar
+diversidade real.
 
-All bibliographical references should be listed at the end of the submission, in a section named ``REFERENCES,'' numbered and in the order that they first appear in the text. Formatting in the REFERENCES section must conform to the IEEE standard (\url{https://ieeeauthorcenter.ieee.org/wp-content/uploads/IEEE-Reference-Guide.pdf}). Approved IEEE abbreviations (Proceedings $\rightarrow$ Proc.) may be used to shorten reference listings. All references listed should be cited in the text. When referring to documents, place the numbers in square brackets (e.g., \cite{ISMIR17Author:01} for a single reference, or \cite{JNMR10Someone:01,Book20Person:01,Chapter09Person:01} for a range).
+Em suma, ordem 2 com $T{=}1{,}0$ é a configuração recomendada, com KL
+$=0{,}022$, ordem 1 com $T{=}0{,}5$ serve de referência conservadora, com menor
+variância e entropia mais próxima da real, e ordem 1 com $T{=}1{,}5$ ilustra
+divergência máxima, com KL $=0{,}208$, saltos frequentes e pouca estrutura
+frásica.
 
-\textbf{As submission is double blind, refer to your own published work in the third person.} That is, use ``In the previous work of \cite{ISMIR17Author:01},'' not ``In our previous work \cite{ISMIR17Author:01}.'' If you cite your other papers that are not widely available (e.g., a journal paper under review), use anonymous author names in the citation, e.g., an author of the form ``A. Anonymous.''
+% -----------------------------------------------
+\section{Discussão e Trabalhos Futuros}\label{sec:discussion}
 
-\section{Acknowledgments}
+\subsection{Limitações}
 
-You may include an optional Acknowledgments section in your camera-ready version to refer to any individuals or organizations that should be acknowledged in your paper. \textbf{Do not include the Acknowledgments section in your submitted manuscript.} The Acknowledgments section does \textit{not} count towards the page limit for scientific content.
+A principal limitação está na natureza das métricas empregadas. Entropia,
+divergência KL e mean-$z$ capturam estatísticas agregadas de pitch e intervalo,
+mas não avaliam estrutura musical de mais alto nível, como frase, cadência ou
+forma. Uma avaliação perceptual complementar, idealmente com ouvintes de
+formação musical, ainda seria valiosa para validar essas conclusões. O autor,
+sem essa formação, apoiou a análise sobretudo nas métricas objetivas por esse
+motivo.
 
-\section{AI Usage Statement}
+Duas outras limitações vêm da representação escolhida. O sistema gera linhas sem
+harmonização, mesmo treinado sobre um repertório harmonizado, já que o baixo é
+só uma das quatro vozes de cada coral, o que restringe a percepção musical do
+resultado a uma única linha melódica. Já as notas simultâneas na voz do baixo
+são reduzidas à nota mais aguda, embora isso seja raro nesse tipo de voz
+predominantemente monofônica.
 
-In line with the ISMIR 2026 AI Usage Policy, if you need to declare and explain the use of AI tools in the work described in the paper, you can do so by including a section titled ``AI Usage Statement" at the end of the paper. The AI Usage Statement section can be included both at submission time and in your camera-ready version. See the Call for Papers and Author Guidelines for more details. The AI Usage Statement section does \textit{not} count towards the page limit for scientific content. 
+Por fim, a normalização tonal força todas as peças para Dó maior, perdendo a
+identidade tonal original em favor da concentração estatística nos padrões
+melódicos relativos. Uma alternativa seria normalizar apenas os intervalos,
+preservando o modo.
 
-\section{Ethics Statement}
+\subsection{Trabalhos Futuros}
 
-You may include an optional Ethics Statement section at the end of the paper to provide additional ethical considerations related to your paper. The Ethics Statement section can be included both at submission time and in your camera-ready version. See the Call for Papers and Submission Guidelines for details. The Ethics Statement section does \textit{not} count towards the page limit for scientific content.
+Uma extensão imediata é adotar a abordagem de múltiplos pontos de vista de
+Conklin \& Witten (1995) e Pearce \& Wiggins
+(2004)~\cite{Conklin1995:multiple,Pearce2004:methods}, combinando cadeias sobre
+pitch, intervalo e duração para mitigar a esparsidade de estados de ordem
+elevada. Outra direção natural, dado que o corpus já contém as quatro vozes de
+cada coral, é condicionar a cadeia do baixo às demais vozes (soprano, alto,
+tenor) como harmonização, análogo ao Continuator de Pachet
+(2003)~\cite{Pachet2003:continuator}, mas guiado pela harmonia real de Bach, não
+por interação em tempo real. Por fim, modelos de linguagem musical como Music
+Transformer, Coconet ou DeepBach oferecem um patamar comparativo natural para
+avaliar o ganho das abordagens neurais sobre o baseline Markoviano.
 
-\section{Camera Ready Preparation}\label{sec:cameraready}
+% -----------------------------------------------
+\section{Declaração de Uso de IA}
 
-\textbf{The camera-ready version should include the names, affiliations and email addresses of the authors.} Authors' names are centered. The lead author's name is to be listed first (left-most), and the co-authors' names after. If the addresses for all authors are the same, include the address only once, centered. If the authors have different addresses, put the addresses, evenly spaced, under each authors' name. To display the author information in \LaTeX, please remove the global option `submission' when importing the `ismir' package (i.e., \texttt{\textbackslash usepackage\{ismir\}} in line 16).
+Este trabalho utilizou assistência de IA generativa (Claude, Anthropic), via
+\emph{Claude for Scientists}, como apoio na implementação do código, na análise
+quantitativa dos resultados e na revisão do resumo. Detalhes do uso e o acesso
+às conversas estão declarados no README do repositório
+(\url{https://github.com/ericksoares13/DCC831-TP1}).
 
-\textbf{Please make sure that the author names, paper title and proceedings title are shown correctly in the copyright notice.} For \LaTeX\ users, the proceedings title will be automatically loaded when you remove the global option `submission' when importing the `ismir' package (i.e., \texttt{\textbackslash usepackage\{ismir\}} in line 16). For Word users, you will need to manually replace ``submitted to \textit{ISMIR}, 2026'' to ``in \textit{Proc. of the 27th Int. Society for Music Information Retrieval Conf.}, Abu Dhabi, UAE, 2026.''
-
-\textbf{You must also remove all line numbers from the final camera-ready version.} This can be done in \LaTeX\ by removing the global option `submission' when importing the ismir package (i.e., \texttt{\textbackslash usepackage\{ismir\}} in line 16). This can be done in Microsoft Word by selecting ``Layout > Line Numbers > None.''
-
-% For BibTeX users:
+% -----------------------------------------------
 \bibliography{ISMIRtemplate}
-
-% For non BibTeX users:
-%\begin{thebibliography}{citations}
-% \bibitem{Author:17}
-% E.~Author and B.~Authour, ``The title of the conference paper,'' in {\em Proc.
-% of the Int. Society for Music Information Retrieval Conf.}, (Suzhou, China),
-% pp.~111--117, 2017.
-%
-% \bibitem{Someone:10}
-% A.~Someone, B.~Someone, and C.~Someone, ``The title of the journal paper,''
-%  {\em Journal of New Music Research}, vol.~A, pp.~111--222, September 2010.
-%
-% \bibitem{Person:20}
-% O.~Person, {\em Title of the Book}.
-% \newblock Montr\'{e}al, Canada: McGill-Queen's University Press, 2021.
-%
-% \bibitem{Person:09}
-% F.~Person and S.~Person, ``Title of a chapter this book,'' in {\em A Book
-% Containing Delightful Chapters} (A.~G. Editor, ed.), pp.~58--102, Tokyo,
-% Japan: The Publisher, 2009.
-%
-%\end{thebibliography}
 
 \end{document}
