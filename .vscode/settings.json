@@ -1,0 +1,10 @@
+{
+    "latex-workshop.formatting.latex": "latexindent",
+    "rewrap.wrappingColumn": 80,
+    "[latex]": {
+        "editor.defaultFormatter": "James-Yu.latex-workshop",
+        "editor.formatOnSave": true,
+        "editor.wordWrapColumn": 80,
+        "editor.rulers": [80]
+    }
+}
